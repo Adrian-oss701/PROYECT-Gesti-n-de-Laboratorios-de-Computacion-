@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reservas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4">
+  <a class="navbar-brand" href="/dashboard">← Dashboard</a>
+  <span class="text-white">Reservas</span>
+</nav>
+<div class="container mt-4">
+
+  <!-- Consulta por fecha -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title">Consultar reservas por fecha</h6>
+      <div class="input-group" style="max-width:350px">
+        <input type="date" id="fechaBusqueda" class="form-control">
+        <button class="btn btn-outline-primary" onclick="buscarPorFecha()">Buscar</button>
+        <button class="btn btn-outline-secondary" onclick="cargar()">Ver todas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario nueva reserva -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title" id="formTitulo">Nueva Reserva</h6>
+      <input type="hidden" id="editId">
+      <div class="row g-2">
+        <div class="col-md-2"><input type="date" id="fecha" class="form-control"></div>
+        <div class="col-md-2"><input type="time" id="hora_inicio" class="form-control"></div>
+        <div class="col-md-2"><input type="time" id="hora_fin" class="form-control"></div>
+        <div class="col-md-2"><input id="motivo" class="form-control" placeholder="Motivo"></div>
+        <div class="col-md-1">
+          <select id="usuario_id" class="form-select"></select>
+        </div>
+        <div class="col-md-1">
+          <select id="laboratorio_id" class="form-select"></select>
+        </div>
+        <div class="col-md-2 d-flex gap-1" id="estadoPanel" style="display:none!important">
+          <select id="estado" class="form-select">
+            <option value="PENDIENTE">PENDIENTE</option>
+            <option value="APROBADA">APROBADA</option>
+            <option value="RECHAZADA">RECHAZADA</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+          <button class="btn btn-success" onclick="guardar()">Guardar</button>
+          <button class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr><th>ID</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Motivo</th><th>Estado</th><th>Usuario</th><th>Laboratorio</th><th>Acciones</th></tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+const rol = localStorage.getItem("rol");
+if (!token) window.location = "/login";
+if (rol === "ADMIN") document.getElementById("estadoPanel").style.setProperty("display","flex","important");
+
+async function cargar() {
+  const res = await fetch("/reservas", { headers: { "Authorization": "Bearer " + token } });
+  mostrarTabla(await res.json());
+}
+
+async function buscarPorFecha() {
+  const fecha = document.getElementById("fechaBusqueda").value;
+  if (!fecha) return alert("Selecciona una fecha");
+  const res = await fetch(`/reservas/por-fecha?fecha=${fecha}`, { headers: { "Authorization": "Bearer " + token } });
+  mostrarTabla(await res.json());
+}
+
+function mostrarTabla(datos) {
+  const esAdmin = rol === "ADMIN";
+  let html = "";
+  datos.forEach(r => {
+    const badge = r.estado === "APROBADA" ? "success" : r.estado === "RECHAZADA" ? "danger" : "warning";
+    html += `<tr>
+      <td>${r.id}</td><td>${r.fecha}</td><td>${r.hora_inicio}</td><td>${r.hora_fin}</td>
+      <td>${r.motivo}</td>
+      <td><span class="badge bg-${badge}">${r.estado}</span></td>
+      <td>${r.usuario_nombre || r.usuario_id}</td>
+      <td>${r.laboratorio_nombre || r.laboratorio_id}</td>
+      <td>
+        ${esAdmin ? `<button class="btn btn-sm btn-warning me-1" onclick='editar(${JSON.stringify(r)})'>Editar</button>` : ""}
+        <button class="btn btn-sm btn-danger" onclick="eliminar(${r.id})">Eliminar</button>
+      </td>
+    </tr>`;
+  });
+  document.getElementById("tabla").innerHTML = html;
+}
+
+async function cargarSelectores() {
+  const [ru, rl] = await Promise.all([
+    fetch("/usuarios", { headers: { "Authorization": "Bearer " + token } }).then(r => r.json()),
+    fetch("/laboratorios").then(r => r.json())
+  ]);
+  document.getElementById("usuario_id").innerHTML = ru.map(u => `<option value="${u.id}">${u.nombre}</option>`).join("");
+  document.getElementById("laboratorio_id").innerHTML = rl.map(l => `<option value="${l.id}">${l.nombre}</option>`).join("");
+}
+
+async function guardar() {
+  const id = document.getElementById("editId").value;
+  const body = {
+    fecha: document.getElementById("fecha").value,
+    hora_inicio: document.getElementById("hora_inicio").value,
+    hora_fin: document.getElementById("hora_fin").value,
+    motivo: document.getElementById("motivo").value,
+    estado: document.getElementById("estado").value,
+    usuario_id: parseInt(document.getElementById("usuario_id").value),
+    laboratorio_id: parseInt(document.getElementById("laboratorio_id").value)
+  };
+  const url = id ? `/reservas/${id}` : "/reservas";
+  const method = id ? "PUT" : "POST";
+  const res = await fetch(url, {
+    method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  alert(data.mensaje); limpiar(); cargar();
+}
+
+function editar(r) {
+  document.getElementById("editId").value = r.id;
+  document.getElementById("fecha").value = r.fecha;
+  document.getElementById("hora_inicio").value = r.hora_inicio.substring(0,5);
+  document.getElementById("hora_fin").value = r.hora_fin.substring(0,5);
+  document.getElementById("motivo").value = r.motivo;
+  document.getElementById("estado").value = r.estado;
+  document.getElementById("usuario_id").value = r.usuario_id;
+  document.getElementById("laboratorio_id").value = r.laboratorio_id;
+  document.getElementById("formTitulo").textContent = "Editar Reserva #" + r.id;
+}
+
+async function eliminar(id) {
+  if (!confirm("¿Eliminar esta reserva?")) return;
+  const res = await fetch(`/reservas/${id}`, {
+    method: "DELETE", headers: { "Authorization": "Bearer " + token }
+  });
+  const data = await res.json(); alert(data.mensaje); cargar();
+}
+
+function limpiar() {
+  ["editId","fecha","hora_inicio","hora_fin","motivo"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("estado").value = "PENDIENTE";
+  document.getElementById("formTitulo").textContent = "Nueva Reserva";
+}
+
+if (rol === "ADMIN") cargarSelectores();
+cargar();
+</script>
+</body>
+</html>

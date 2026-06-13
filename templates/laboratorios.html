@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Laboratorios</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4">
+  <a class="navbar-brand" href="/dashboard">← Dashboard</a>
+  <span class="text-white">Laboratorios</span>
+</nav>
+<div class="container mt-4">
+
+  <!-- Consulta personalizada: disponibilidad por fecha -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title">Consultar disponibilidad por fecha</h6>
+      <div class="input-group" style="max-width:350px">
+        <input type="date" id="fechaConsulta" class="form-control">
+        <button class="btn btn-outline-primary" onclick="consultarDisponibles()">Consultar</button>
+      </div>
+      <div id="resultadoDisponibles" class="mt-2"></div>
+    </div>
+  </div>
+
+  <!-- Formulario CRUD -->
+  <div class="card mb-4" id="adminPanel">
+    <div class="card-body">
+      <h6 class="card-title" id="formTitulo">Nuevo Laboratorio</h6>
+      <input type="hidden" id="editId">
+      <div class="row g-2">
+        <div class="col-md-3"><input id="nombre" class="form-control" placeholder="Nombre"></div>
+        <div class="col-md-3"><input id="ubicacion" class="form-control" placeholder="Ubicación"></div>
+        <div class="col-md-2"><input id="capacidad" class="form-control" placeholder="Capacidad" type="number"></div>
+        <div class="col-md-2">
+          <select id="estado" class="form-select">
+            <option value="DISPONIBLE">DISPONIBLE</option>
+            <option value="OCUPADO">OCUPADO</option>
+            <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+            <option value="FUERA_SERVICIO">FUERA_SERVICIO</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+          <button class="btn btn-success" onclick="guardar()">Guardar</button>
+          <button class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr><th>ID</th><th>Nombre</th><th>Ubicación</th><th>Capacidad</th><th>Estado</th><th id="accionesHeader">Acciones</th></tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+const rol = localStorage.getItem("rol");
+if (!token) window.location = "/login";
+if (rol !== "ADMIN") {
+  document.getElementById("adminPanel").style.display = "none";
+  document.getElementById("accionesHeader").style.display = "none";
+}
+
+async function cargar() {
+  const res = await fetch("/laboratorios");
+  const datos = await res.json();
+  const esAdmin = rol === "ADMIN";
+  let html = "";
+  datos.forEach(l => {
+    html += `<tr>
+      <td>${l.id}</td><td>${l.nombre}</td><td>${l.ubicacion}</td>
+      <td>${l.capacidad}</td><td>${l.estado}</td>
+      <td>${esAdmin ? `<button class="btn btn-sm btn-warning me-1" onclick='editar(${JSON.stringify(l)})'>Editar</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminar(${l.id})">Eliminar</button>` : ""}</td>
+    </tr>`;
+  });
+  document.getElementById("tabla").innerHTML = html;
+}
+
+async function guardar() {
+  const id = document.getElementById("editId").value;
+  const body = {
+    nombre: document.getElementById("nombre").value,
+    ubicacion: document.getElementById("ubicacion").value,
+    capacidad: parseInt(document.getElementById("capacidad").value),
+    estado: document.getElementById("estado").value
+  };
+  const url = id ? `/laboratorios/${id}` : "/laboratorios";
+  const method = id ? "PUT" : "POST";
+  const res = await fetch(url, {
+    method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  alert(data.mensaje);
+  limpiar(); cargar();
+}
+
+function editar(l) {
+  document.getElementById("editId").value = l.id;
+  document.getElementById("nombre").value = l.nombre;
+  document.getElementById("ubicacion").value = l.ubicacion;
+  document.getElementById("capacidad").value = l.capacidad;
+  document.getElementById("estado").value = l.estado;
+  document.getElementById("formTitulo").textContent = "Editar Laboratorio #" + l.id;
+}
+
+async function eliminar(id) {
+  if (!confirm("¿Eliminar este laboratorio?")) return;
+  const res = await fetch(`/laboratorios/${id}`, {
+    method: "DELETE", headers: { "Authorization": "Bearer " + token }
+  });
+  const data = await res.json();
+  alert(data.mensaje); cargar();
+}
+
+function limpiar() {
+  ["editId","nombre","ubicacion","capacidad"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("estado").value = "DISPONIBLE";
+  document.getElementById("formTitulo").textContent = "Nuevo Laboratorio";
+}
+
+async function consultarDisponibles() {
+  const fecha = document.getElementById("fechaConsulta").value;
+  if (!fecha) return alert("Selecciona una fecha");
+  const res = await fetch(`/laboratorios/disponibles?fecha=${fecha}`);
+  const datos = await res.json();
+  const div = document.getElementById("resultadoDisponibles");
+  if (datos.length === 0) {
+    div.innerHTML = `<span class="text-danger">No hay laboratorios disponibles para ${fecha}</span>`;
+  } else {
+    div.innerHTML = `<strong>Disponibles el ${fecha}:</strong> ` + datos.map(l => `<span class="badge bg-success me-1">${l.nombre}</span>`).join("");
+  }
+}
+
+cargar();
+</script>
+</body>
+</html>

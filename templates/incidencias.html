@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Incidencias</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4">
+  <a class="navbar-brand" href="/dashboard">← Dashboard</a>
+  <span class="text-white">Incidencias</span>
+</nav>
+<div class="container mt-4">
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title" id="formTitulo">Nueva Incidencia</h6>
+      <input type="hidden" id="editId">
+      <div class="row g-2">
+        <div class="col-md-4"><input id="descripcion" class="form-control" placeholder="Descripción"></div>
+        <div class="col-md-2">
+          <select id="prioridad" class="form-select">
+            <option value="BAJA">BAJA</option>
+            <option value="MEDIA" selected>MEDIA</option>
+            <option value="ALTA">ALTA</option>
+            <option value="CRITICA">CRITICA</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select id="estado_inc" class="form-select">
+            <option value="ABIERTA" selected>ABIERTA</option>
+            <option value="EN_PROCESO">EN_PROCESO</option>
+            <option value="CERRADA">CERRADA</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <select id="usuario_id" class="form-select"></select>
+        </div>
+        <div class="col-md-1">
+          <select id="laboratorio_id" class="form-select"></select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+          <button class="btn btn-success" onclick="guardar()">Guardar</button>
+          <button class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr><th>ID</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Fecha</th><th>Usuario</th><th>Laboratorio</th><th>Acciones</th></tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+const rol = localStorage.getItem("rol");
+if (!token) window.location = "/login";
+
+async function cargar() {
+  const res = await fetch("/incidencias", { headers: { "Authorization": "Bearer " + token } });
+  const datos = await res.json();
+  const esAdmin = rol === "ADMIN";
+  let html = "";
+  datos.forEach(i => {
+    const pColor = i.prioridad === "CRITICA" ? "danger" : i.prioridad === "ALTA" ? "warning text-dark" : i.prioridad === "MEDIA" ? "info text-dark" : "secondary";
+    const eColor = i.estado === "CERRADA" ? "success" : i.estado === "EN_PROCESO" ? "warning text-dark" : "danger";
+    html += `<tr>
+      <td>${i.id}</td><td>${i.descripcion}</td>
+      <td><span class="badge bg-${pColor}">${i.prioridad}</span></td>
+      <td><span class="badge bg-${eColor}">${i.estado}</span></td>
+      <td>${i.fecha || "-"}</td>
+      <td>${i.usuario_nombre || i.usuario_id}</td>
+      <td>${i.laboratorio_nombre || i.laboratorio_id}</td>
+      <td>
+        <button class="btn btn-sm btn-warning me-1" onclick='editar(${JSON.stringify(i)})'>Editar</button>
+        ${esAdmin ? `<button class="btn btn-sm btn-danger" onclick="eliminar(${i.id})">Eliminar</button>` : ""}
+      </td>
+    </tr>`;
+  });
+  document.getElementById("tabla").innerHTML = html;
+}
+
+async function cargarSelectores() {
+  const [ru, rl] = await Promise.all([
+    fetch("/usuarios", { headers: { "Authorization": "Bearer " + token } }).then(r => r.json()),
+    fetch("/laboratorios").then(r => r.json())
+  ]);
+  document.getElementById("usuario_id").innerHTML = ru.map ? ru.map(u => `<option value="${u.id}">${u.nombre}</option>`).join("") : "";
+  document.getElementById("laboratorio_id").innerHTML = rl.map(l => `<option value="${l.id}">${l.nombre}</option>`).join("");
+}
+
+async function guardar() {
+  const id = document.getElementById("editId").value;
+  const body = {
+    descripcion: document.getElementById("descripcion").value,
+    prioridad: document.getElementById("prioridad").value,
+    estado: document.getElementById("estado_inc").value,
+    usuario_id: parseInt(document.getElementById("usuario_id").value),
+    laboratorio_id: parseInt(document.getElementById("laboratorio_id").value)
+  };
+  const url = id ? `/incidencias/${id}` : "/incidencias";
+  const method = id ? "PUT" : "POST";
+  const res = await fetch(url, {
+    method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  alert(data.mensaje); limpiar(); cargar();
+}
+
+function editar(i) {
+  document.getElementById("editId").value = i.id;
+  document.getElementById("descripcion").value = i.descripcion;
+  document.getElementById("prioridad").value = i.prioridad;
+  document.getElementById("estado_inc").value = i.estado;
+  document.getElementById("usuario_id").value = i.usuario_id;
+  document.getElementById("laboratorio_id").value = i.laboratorio_id;
+  document.getElementById("formTitulo").textContent = "Editar Incidencia #" + i.id;
+}
+
+async function eliminar(id) {
+  if (!confirm("¿Eliminar esta incidencia?")) return;
+  const res = await fetch(`/incidencias/${id}`, {
+    method: "DELETE", headers: { "Authorization": "Bearer " + token }
+  });
+  const data = await res.json(); alert(data.mensaje); cargar();
+}
+
+function limpiar() {
+  ["editId","descripcion"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("prioridad").value = "MEDIA";
+  document.getElementById("estado_inc").value = "ABIERTA";
+  document.getElementById("formTitulo").textContent = "Nueva Incidencia";
+}
+
+cargarSelectores();
+cargar();
+</script>
+</body>
+</html>
