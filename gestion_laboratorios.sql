@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 13-06-2026 a las 04:36:09
+-- Tiempo de generación: 13-06-2026 a las 04:57:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `gestion_laboratorios`
 --
+CREATE DATABASE IF NOT EXISTS `gestion_laboratorios` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `gestion_laboratorios`;
 
 -- --------------------------------------------------------
 
