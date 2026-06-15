@@ -13,13 +13,6 @@
     .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .table > :not(caption) > * > * { vertical-align: middle; }
     .badge { font-weight: 500; padding: 0.5em 0.75em; }
-    .slot-btn { transition: all 0.2s; font-size: 0.85rem; }
-    .slot-btn:hover:not(:disabled) { transform: scale(1.05); }
-    .slot-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .horario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-    .lab-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-    .lab-card:hover { border-color: #0d6efd; transform: translateY(-2px); }
-    .lab-card.selected { border-color: #0d6efd; background-color: #e7f1ff; }
     .fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -29,96 +22,58 @@
 <nav class="navbar navbar-dark bg-dark px-4 py-3">
   <div class="container-fluid">
     <a class="navbar-brand" href="/dashboard"><i class="bi bi-arrow-left-short me-1"></i> Volver al Dashboard</a>
-    <span class="text-white fw-bold"><i class="bi bi-building me-2"></i> Laboratorios y Disponibilidad</span>
+    <span class="text-white fw-bold"><i class="bi bi-building me-2"></i> Gestión de Laboratorios</span>
   </div>
 </nav>
 
 <div class="container mt-4">
-  <div class="card mb-4 border-top border-primary border-4">
-    <div class="card-body">
-      <h5 class="card-title text-primary fw-bold mb-3"><i class="bi bi-search me-2"></i>Consultar Disponibilidad</h5>
-      <div class="row g-3 align-items-end">
-        <div class="col-md-3">
-          <label class="form-label fw-semibold small">Fecha</label>
-          <input type="date" id="fechaConsulta" class="form-control" min="">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold small">Hora Inicio (opcional)</label>
-          <input type="time" id="horaInicioConsulta" class="form-control">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold small">Hora Fin (opcional)</label>
-          <input type="time" id="horaFinConsulta" class="form-control">
-        </div>
-        <div class="col-md-3">
-          <button class="btn btn-primary w-100" onclick="consultarDisponibles()">
-            <i class="bi bi-search me-1"></i> Consultar
-          </button>
-        </div>
-      </div>
-      
-      <div id="resultadoDisponibles" class="mt-4" style="display: none;">
-        <hr>
-        <h6 class="fw-bold mb-3"><i class="bi bi-building me-2 text-success"></i>Laboratorios Disponibles</h6>
-        <div id="listaLabsDisp" class="row g-3"></div>
-      </div>
-      
-      <div id="resultadoHorarios" class="mt-4" style="display: none;">
-        <hr>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-success"></i>Horarios Disponibles - <span id="nombreLabSel" class="text-primary"></span></h6>
-          <span class="badge bg-light text-dark border">Fecha: <span id="fechaSel"></span></span>
-        </div>
-        <div id="gridHorarios" class="horario-grid mb-3"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-12 mb-4" id="adminPanel" style="display: none;">
-    <div class="card border-primary border-top border-4">
-      <div class="card-body">
-        <h6 class="card-title text-primary fw-bold" id="formTitulo"><i class="bi bi-plus-circle me-2"></i>Gestión de Laboratorio (Admin)</h6>
-        <input type="hidden" id="editId">
-        <div class="row g-2 mt-2">
-          <div class="col-md-3">
-            <div class="form-floating">
-              <input id="nombre" class="form-control" placeholder="Nombre">
-              <label for="nombre">Nombre</label>
+  <div class="row mb-4">
+    <div class="col-md-12" id="adminPanel" style="display: none;">
+      <div class="card border-primary border-top border-4 mb-4 fade-in">
+        <div class="card-body">
+          <h6 class="card-title text-primary fw-bold" id="formTitulo"><i class="bi bi-plus-circle me-2"></i>Nuevo Laboratorio</h6>
+          <input type="hidden" id="editId">
+          <div class="row g-2 mt-2">
+            <div class="col-md-3">
+              <div class="form-floating">
+                <input id="nombre" class="form-control" placeholder="Nombre">
+                <label for="nombre">Nombre</label>
+              </div>
             </div>
-          </div>
-          <div class="col-md-3">
-            <div class="form-floating">
-              <input id="ubicacion" class="form-control" placeholder="Ubicación">
-              <label for="ubicacion">Ubicación</label>
+            <div class="col-md-3">
+              <div class="form-floating">
+                <input id="ubicacion" class="form-control" placeholder="Ubicación">
+                <label for="ubicacion">Ubicación</label>
+              </div>
             </div>
-          </div>
-          <div class="col-md-2">
-            <div class="form-floating">
-              <input id="capacidad" class="form-control" placeholder="Capacidad" type="number">
-              <label for="capacidad">Capacidad</label>
+            <div class="col-md-2">
+              <div class="form-floating">
+                <input id="capacidad" class="form-control" placeholder="Capacidad" type="number">
+                <label for="capacidad">Capacidad</label>
+              </div>
             </div>
-          </div>
-          <div class="col-md-2">
-            <div class="form-floating">
-              <select id="estado" class="form-select">
-                <option value="DISPONIBLE">DISPONIBLE</option>
-                <option value="OCUPADO">OCUPADO</option>
-                <option value="MANTENIMIENTO">MANTENIMIENTO</option>
-                <option value="FUERA_SERVICIO">FUERA_SERVICIO</option>
-              </select>
-              <label for="estado">Estado</label>
+            <div class="col-md-2">
+              <div class="form-floating">
+                <select id="estado" class="form-select">
+                  <option value="DISPONIBLE">DISPONIBLE</option>
+                  <option value="OCUPADO">OCUPADO</option>
+                  <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                  <option value="FUERA_SERVICIO">FUERA_SERVICIO</option>
+                </select>
+                <label for="estado">Estado</label>
+              </div>
             </div>
-          </div>
-          <div class="col-md-2 mt-3 text-end d-flex align-items-center">
-            <button class="btn btn-light me-1 btn-sm" onclick="limpiar()"><i class="bi bi-x"></i></button>
-            <button class="btn btn-primary w-100" onclick="guardar()"><i class="bi bi-save me-1"></i> Guardar</button>
+            <div class="col-md-2 mt-3 text-end d-flex align-items-center">
+              <button class="btn btn-light me-1 btn-sm" onclick="limpiar()" title="Limpiar formulario"><i class="bi bi-x-lg"></i></button>
+              <button class="btn btn-primary w-100" onclick="guardar()"><i class="bi bi-save me-1"></i> Guardar</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="table-container">
+  <div class="table-container fade-in">
     <h5 class="mb-3 text-secondary"><i class="bi bi-list-ul me-2"></i>Listado de Laboratorios</h5>
     <div class="table-responsive">
       <table class="table table-hover border-top">
@@ -138,113 +93,35 @@ if (!token) window.location = "/login";
 
 const esAdmin = rol === "ADMIN";
 
-document.getElementById("fechaConsulta").min = new Date().toISOString().split("T")[0];
-
 if (esAdmin) {
   document.getElementById("adminPanel").style.display = "block";
   document.getElementById("accionesHeader").style.display = "table-cell";
 }
 
-let labSel = null;
-let fechaSel = null;
-
-async function consultarDisponibles() {
-  const fecha = document.getElementById("fechaConsulta").value;
-  const horaInicio = document.getElementById("horaInicioConsulta").value;
-  const horaFin = document.getElementById("horaFinConsulta").value;
-  
-  if (!fecha) return alert("Selecciona una fecha");
-  fechaSel = fecha;
-  
-  let url = `/laboratorios/disponibles?fecha=${fecha}`;
-  if (horaInicio && horaFin) {
-    url += `&hora_inicio=${horaInicio}&hora_fin=${horaFin}`;
-  }
-  
-  try {
-    const res = await fetch(url);
-    const datos = await res.json();
-    
-    const div = document.getElementById("listaLabsDisp");
-    const container = document.getElementById("resultadoDisponibles");
-    
-    if (datos.length === 0) {
-      div.innerHTML = `<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-circle me-2"></i>No hay laboratorios disponibles.</div></div>`;
-    } else {
-      div.innerHTML = datos.map(l => `
-        <div class="col-md-4 col-lg-3">
-          <div class="card lab-card h-100" onclick="verHorariosLab(${l.id}, '${l.nombre}')">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start">
-                <h6 class="fw-bold mb-1">${l.nombre}</h6>
-                <span class="badge bg-success">DISPONIBLE</span>
-              </div>
-              <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>${l.ubicacion}</p>
-              <p class="small text-muted mb-0"><i class="bi bi-people me-1"></i>${l.capacidad} personas</p>
-            </div>
-          </div>
-        </div>
-      `).join("");
-    }
-    
-    container.style.display = "block";
-    container.classList.add("fade-in");
-    document.getElementById("resultadoHorarios").style.display = "none";
-    
-  } catch (e) {}
-}
-
-async function verHorariosLab(id, nombre) {
-  labSel = { id, nombre };
-  
-  document.querySelectorAll('.lab-card').forEach(c => c.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  
-  try {
-    const res = await fetch(`/laboratorios/${id}/horarios?fecha=${fechaSel}`);
-    const data = await res.json();
-    
-    document.getElementById("nombreLabSel").textContent = nombre;
-    document.getElementById("fechaSel").textContent = fechaSel;
-    
-    const grid = document.getElementById("gridHorarios");
-    grid.innerHTML = data.slots.map(s => {
-      const btnClass = s.disponible ? 'btn-outline-success' : 'btn-secondary';
-      const disabled = s.disponible ? '' : 'disabled';
-      const icon = s.disponible ? '<i class="bi bi-check-circle me-1"></i>' : '<i class="bi bi-x-circle me-1"></i>';
-      return `
-        <button class="btn ${btnClass} slot-btn py-2" ${disabled}>
-          ${icon}${s.hora_inicio} - ${s.hora_fin}
-        </button>
-      `;
-    }).join("");
-    
-    document.getElementById("resultadoHorarios").style.display = "block";
-    document.getElementById("resultadoHorarios").classList.add("fade-in");
-    
-  } catch (e) {}
-}
-
 async function cargar() {
-  const res = await fetch("/laboratorios");
-  const datos = await res.json();
-  let html = "";
-  datos.forEach(l => {
-    let badgeColor = l.estado === 'DISPONIBLE' ? 'success' : l.estado === 'OCUPADO' ? 'warning text-dark' : 'danger';
-    html += `<tr>
-      <td><span class="text-muted fw-bold">#${l.id}</span></td>
-      <td class="fw-bold">${l.nombre}</td>
-      <td><i class="bi bi-geo-alt text-muted me-1"></i>${l.ubicacion}</td>
-      <td>${l.capacidad} pax</td>
-      <td><span class="badge rounded-pill bg-${badgeColor}">${l.estado}</span></td>
-      ${esAdmin ? `
-      <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary me-1" onclick='editar(${JSON.stringify(l)})'><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger" onclick="eliminar(${l.id})"><i class="bi bi-trash"></i></button>
-      </td>` : `<td style="display:none;"></td>`}
-    </tr>`;
-  });
-  document.getElementById("tabla").innerHTML = html;
+  try {
+    const res = await fetch("/laboratorios");
+    const datos = await res.json();
+    let html = "";
+    datos.forEach(l => {
+      let badgeColor = l.estado === 'DISPONIBLE' ? 'success' : l.estado === 'OCUPADO' ? 'warning text-dark' : 'danger';
+      html += `<tr>
+        <td><span class="text-muted fw-bold">#${l.id}</span></td>
+        <td class="fw-bold">${l.nombre}</td>
+        <td><i class="bi bi-geo-alt text-muted me-1"></i>${l.ubicacion}</td>
+        <td>${l.capacidad} pax</td>
+        <td><span class="badge rounded-pill bg-${badgeColor}">${l.estado}</span></td>
+        ${esAdmin ? `
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary me-1" onclick='editar(${JSON.stringify(l)})'><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="eliminar(${l.id})"><i class="bi bi-trash"></i></button>
+        </td>` : `<td style="display:none;"></td>`}
+      </tr>`;
+    });
+    document.getElementById("tabla").innerHTML = html;
+  } catch (error) {
+    console.error("Error al cargar laboratorios:", error);
+  }
 }
 
 async function guardar() {
@@ -256,14 +133,27 @@ async function guardar() {
     capacidad: parseInt(document.getElementById("capacidad").value),
     estado: document.getElementById("estado").value
   };
+  
+  if(!body.nombre || !body.ubicacion || isNaN(body.capacidad)) {
+    return alert("Por favor, completa todos los campos correctamente.");
+  }
+
   const url = id ? `/laboratorios/${id}` : "/laboratorios";
   const method = id ? "PUT" : "POST";
-  const res = await fetch(url, {
-    method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  alert(data.mensaje); limpiar(); cargar();
+  
+  try {
+    const res = await fetch(url, {
+      method, 
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    alert(data.mensaje || "Operación realizada con éxito"); 
+    limpiar(); 
+    cargar();
+  } catch (error) {
+    alert("Error al guardar el laboratorio.");
+  }
 }
 
 function editar(l) {
@@ -274,15 +164,22 @@ function editar(l) {
   document.getElementById("capacidad").value = l.capacidad;
   document.getElementById("estado").value = l.estado;
   document.getElementById("formTitulo").innerHTML = `<i class="bi bi-pencil-square me-2"></i>Editar Laboratorio #${l.id}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function eliminar(id) {
   if(!esAdmin) return;
   if (!confirm("¿Eliminar este laboratorio?")) return;
-  const res = await fetch(`/laboratorios/${id}`, {
-    method: "DELETE", headers: { "Authorization": "Bearer " + token }
-  });
-  const data = await res.json(); alert(data.mensaje); cargar();
+  try {
+    const res = await fetch(`/laboratorios/${id}`, {
+      method: "DELETE", headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json(); 
+    alert(data.mensaje || "Laboratorio eliminado."); 
+    cargar();
+  } catch (error) {
+    alert("Error al eliminar el laboratorio.");
+  }
 }
 
 function limpiar() {
