@@ -5,6 +5,7 @@ from routes.laboratorio import lab
 from routes.usuario import usu
 from routes.reserva import res
 from routes.incidencia import inc
+from routes.reportes import rep
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "umsa2026"
@@ -15,6 +16,7 @@ app.register_blueprint(lab)
 app.register_blueprint(usu)
 app.register_blueprint(res)
 app.register_blueprint(inc)
+app.register_blueprint(rep)
 
 @app.route("/")
 @app.route("/login")
@@ -40,6 +42,26 @@ def incidencias_view():
 @app.route("/usuarios-ver")
 def usuarios_view():
     return render_template("usuarios.html")
+
+@app.route("/reportes-ver")
+def reportes_view():
+    return render_template("reportes.html")
+
+@app.route("/reportes-ver/reporte_1")
+def reportes_1_view():
+    return render_template("reporte1.html")
+
+@app.route("/reportes-ver/reporte_2")
+def reportes_2_view():
+    return render_template("reporte2.html")
+
+@app.route("/reportes-ver/reporte_3")
+def reportes_3_view():
+    return render_template("reporte3.html")
+
+@app.route("/reportes-ver/reporte_4")
+def reportes_4_view():
+    return render_template("reporte4.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
