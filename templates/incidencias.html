@@ -1,56 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
   <title>Incidencias</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+    .navbar { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .table-container { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;}
+    .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .table > :not(caption) > * > * { vertical-align: middle; }
+    .badge { font-weight: 500; padding: 0.5em 0.75em; }
+  </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark px-4">
-  <a class="navbar-brand" href="/dashboard">← Dashboard</a>
-  <span class="text-white">Incidencias</span>
+
+<nav class="navbar navbar-dark bg-dark px-4 py-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/dashboard"><i class="bi bi-arrow-left-short me-1"></i> Volver al Dashboard</a>
+    <span class="text-white fw-bold"><i class="bi bi-exclamation-triangle me-2"></i> Gestión de Incidencias</span>
+  </div>
 </nav>
+
 <div class="container mt-4">
-  <div class="card mb-4">
+  <div class="card mb-4 border-danger border-top border-4">
     <div class="card-body">
-      <h6 class="card-title" id="formTitulo">Nueva Incidencia</h6>
+      <h6 class="card-title text-danger fw-bold" id="formTitulo"><i class="bi bi-plus-circle me-2"></i>Reportar Nueva Incidencia</h6>
       <input type="hidden" id="editId">
-      <div class="row g-2">
-        <div class="col-md-4"><input id="descripcion" class="form-control" placeholder="Descripción"></div>
-        <div class="col-md-2">
-          <select id="prioridad" class="form-select">
-            <option value="BAJA">BAJA</option>
-            <option value="MEDIA" selected>MEDIA</option>
-            <option value="ALTA">ALTA</option>
-            <option value="CRITICA">CRITICA</option>
-          </select>
+      <div class="row g-3 mt-1">
+        <div class="col-md-12">
+          <div class="form-floating">
+            <input id="descripcion" class="form-control" placeholder="Descripción">
+            <label for="descripcion">Descripción detallada del problema</label>
+          </div>
         </div>
-        <div class="col-md-2">
-          <select id="estado_inc" class="form-select">
-            <option value="ABIERTA" selected>ABIERTA</option>
-            <option value="EN_PROCESO">EN_PROCESO</option>
-            <option value="CERRADA">CERRADA</option>
-          </select>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <select id="prioridad" class="form-select">
+              <option value="BAJA">BAJA</option>
+              <option value="MEDIA" selected>MEDIA</option>
+              <option value="ALTA">ALTA</option>
+              <option value="CRITICA">CRITICA</option>
+            </select>
+            <label for="prioridad">Prioridad</label>
+          </div>
         </div>
-        <div class="col-md-1">
-          <select id="usuario_id" class="form-select"></select>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <select id="estado_inc" class="form-select" disabled>
+              <option value="ABIERTA" selected>ABIERTA</option>
+              <option value="EN_PROCESO">EN_PROCESO</option>
+              <option value="CERRADA">CERRADA</option>
+            </select>
+            <label for="estado_inc">Estado (Automático)</label>
+          </div>
         </div>
-        <div class="col-md-1">
-          <select id="laboratorio_id" class="form-select"></select>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <select id="laboratorio_id" class="form-select"></select>
+            <label for="laboratorio_id">Laboratorio</label>
+          </div>
         </div>
-        <div class="col-md-2 d-flex gap-1">
-          <button class="btn btn-success" onclick="guardar()">Guardar</button>
-          <button class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <select id="usuario_id" class="form-select"></select>
+            <label for="usuario_id">Usuario (Reporta)</label>
+          </div>
+        </div>
+        <div class="col-12 text-end mt-3">
+          <button class="btn btn-light me-2" onclick="limpiar()">Cancelar</button>
+          <button class="btn btn-danger px-4" onclick="guardar()"><i class="bi bi-send me-1"></i> Subir Incidencia</button>
         </div>
       </div>
     </div>
   </div>
 
-  <table class="table table-bordered table-hover">
-    <thead class="table-dark">
-      <tr><th>ID</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Fecha</th><th>Usuario</th><th>Laboratorio</th><th>Acciones</th></tr>
-    </thead>
-    <tbody id="tabla"></tbody>
-  </table>
+  <div class="table-container">
+    <h5 class="mb-3 text-secondary">Registro Histórico</h5>
+    <div class="table-responsive">
+      <table class="table table-hover border-top">
+        <thead class="table-light text-secondary">
+          <tr><th>ID</th><th>Descripción</th><th>Prioridad</th><th>Estado</th><th>Fecha</th><th>Usuario</th><th>Laboratorio</th><th id="accionesHeader" class="text-end" style="display:none;">Acciones</th></tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -58,25 +94,34 @@ const token = localStorage.getItem("token");
 const rol = localStorage.getItem("rol");
 if (!token) window.location = "/login";
 
+const esAdmin = rol === "ADMIN";
+
+if (esAdmin) {
+  document.getElementById("accionesHeader").style.display = "table-cell";
+  document.getElementById("estado_inc").disabled = false; // El admin sí puede forzar el estado
+}
+
 async function cargar() {
   const res = await fetch("/incidencias", { headers: { "Authorization": "Bearer " + token } });
   const datos = await res.json();
-  const esAdmin = rol === "ADMIN";
+  
   let html = "";
   datos.forEach(i => {
     const pColor = i.prioridad === "CRITICA" ? "danger" : i.prioridad === "ALTA" ? "warning text-dark" : i.prioridad === "MEDIA" ? "info text-dark" : "secondary";
     const eColor = i.estado === "CERRADA" ? "success" : i.estado === "EN_PROCESO" ? "warning text-dark" : "danger";
     html += `<tr>
-      <td>${i.id}</td><td>${i.descripcion}</td>
+      <td><span class="text-muted fw-bold">#${i.id}</span></td>
+      <td>${i.descripcion}</td>
       <td><span class="badge bg-${pColor}">${i.prioridad}</span></td>
-      <td><span class="badge bg-${eColor}">${i.estado}</span></td>
-      <td>${i.fecha || "-"}</td>
+      <td><span class="badge rounded-pill bg-${eColor}">${i.estado}</span></td>
+      <td><i class="bi bi-clock text-muted me-1"></i>${i.fecha || "-"}</td>
       <td>${i.usuario_nombre || i.usuario_id}</td>
-      <td>${i.laboratorio_nombre || i.laboratorio_id}</td>
-      <td>
-        <button class="btn btn-sm btn-warning me-1" onclick='editar(${JSON.stringify(i)})'>Editar</button>
-        ${esAdmin ? `<button class="btn btn-sm btn-danger" onclick="eliminar(${i.id})">Eliminar</button>` : ""}
-      </td>
+      <td><i class="bi bi-building text-muted me-1"></i>${i.laboratorio_nombre || i.laboratorio_id}</td>
+      ${esAdmin ? `
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-primary me-1" onclick='editar(${JSON.stringify(i)})'><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="eliminar(${i.id})"><i class="bi bi-trash"></i></button>
+      </td>` : `<td style="display:none;"></td>`}
     </tr>`;
   });
   document.getElementById("tabla").innerHTML = html;
@@ -93,6 +138,9 @@ async function cargarSelectores() {
 
 async function guardar() {
   const id = document.getElementById("editId").value;
+  // Solo el admin puede guardar una edición (PUT), cualquiera puede crear (POST)
+  if (id && !esAdmin) return alert("No tienes permisos para editar incidencias.");
+
   const body = {
     descripcion: document.getElementById("descripcion").value,
     prioridad: document.getElementById("prioridad").value,
@@ -111,16 +159,18 @@ async function guardar() {
 }
 
 function editar(i) {
+  if(!esAdmin) return;
   document.getElementById("editId").value = i.id;
   document.getElementById("descripcion").value = i.descripcion;
   document.getElementById("prioridad").value = i.prioridad;
   document.getElementById("estado_inc").value = i.estado;
   document.getElementById("usuario_id").value = i.usuario_id;
   document.getElementById("laboratorio_id").value = i.laboratorio_id;
-  document.getElementById("formTitulo").textContent = "Editar Incidencia #" + i.id;
+  document.getElementById("formTitulo").innerHTML = `<i class="bi bi-pencil-square me-2"></i>Editar Incidencia #${i.id}`;
 }
 
 async function eliminar(id) {
+  if(!esAdmin) return;
   if (!confirm("¿Eliminar esta incidencia?")) return;
   const res = await fetch(`/incidencias/${id}`, {
     method: "DELETE", headers: { "Authorization": "Bearer " + token }
@@ -132,7 +182,7 @@ function limpiar() {
   ["editId","descripcion"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("prioridad").value = "MEDIA";
   document.getElementById("estado_inc").value = "ABIERTA";
-  document.getElementById("formTitulo").textContent = "Nueva Incidencia";
+  document.getElementById("formTitulo").innerHTML = `<i class="bi bi-plus-circle me-2"></i>Reportar Nueva Incidencia`;
 }
 
 cargarSelectores();
