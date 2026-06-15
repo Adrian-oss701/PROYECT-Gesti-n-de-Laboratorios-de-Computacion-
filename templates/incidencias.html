@@ -2,82 +2,84 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Incidencias</title>
+  <title>Buscador de Incidencias</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <style>
     body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
     .navbar { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .table-container { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;}
+    .table-container { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .table > :not(caption) > * > * { vertical-align: middle; }
     .badge { font-weight: 500; padding: 0.5em 0.75em; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark bg-dark px-4 py-3">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard"><i class="bi bi-arrow-left-short me-1"></i> Volver al Dashboard</a>
-    <span class="text-white fw-bold"><i class="bi bi-exclamation-triangle me-2"></i> Gestión de Incidencias</span>
+    <a class="navbar-brand" href="/dashboard"><i class="bi bi-arrow-left-short me-1"></i> Volver</a>
+    <span class="text-white fw-bold"><i class="bi bi-search me-2"></i> Explorador de Incidencias</span>
   </div>
 </nav>
 
 <div class="container mt-4">
+
   <div class="card mb-4 border-danger border-top border-4">
     <div class="card-body">
-      <h6 class="card-title text-danger fw-bold" id="formTitulo"><i class="bi bi-plus-circle me-2"></i>Reportar Nueva Incidencia</h6>
-      <input type="hidden" id="editId">
-      <div class="row g-3 mt-1">
-        <div class="col-md-12">
-          <div class="form-floating">
-            <input id="descripcion" class="form-control" placeholder="Descripción">
-            <label for="descripcion">Descripción detallada del problema</label>
-          </div>
+      <h6 class="card-title text-danger fw-bold mb-3"><i class="bi bi-calendar-event me-2"></i>Buscar Incidencias por Fecha</h6>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <input type="date" id="fechaBusqueda" class="form-control">
         </div>
-        <div class="col-md-3">
-          <div class="form-floating">
-            <select id="prioridad" class="form-select">
-              <option value="BAJA">BAJA</option>
-              <option value="MEDIA" selected>MEDIA</option>
-              <option value="ALTA">ALTA</option>
-              <option value="CRITICA">CRITICA</option>
-            </select>
-            <label for="prioridad">Prioridad</label>
-          </div>
+        <div class="col-md-2">
+          <button class="btn btn-danger w-100" onclick="buscarPorFecha()">
+            <i class="bi bi-search me-1"></i> Buscar
+          </button>
         </div>
-        <div class="col-md-3">
-          <div class="form-floating">
-            <select id="estado_inc" class="form-select" disabled>
-              <option value="ABIERTA" selected>ABIERTA</option>
-              <option value="EN_PROCESO">EN_PROCESO</option>
-              <option value="CERRADA">CERRADA</option>
-            </select>
-            <label for="estado_inc">Estado (Automático)</label>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="form-floating">
-            <select id="laboratorio_id" class="form-select"></select>
-            <label for="laboratorio_id">Laboratorio</label>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="form-floating">
-            <select id="usuario_id" class="form-select"></select>
-            <label for="usuario_id">Usuario (Reporta)</label>
-          </div>
-        </div>
-        <div class="col-12 text-end mt-3">
-          <button class="btn btn-light me-2" onclick="limpiar()">Cancelar</button>
-          <button class="btn btn-danger px-4" onclick="guardar()"><i class="bi bi-send me-1"></i> Subir Incidencia</button>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" onclick="cargarTodas()">
+            <i class="bi bi-list me-1"></i> Ver Todas
+          </button>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="panelEdicion" class="card mb-4 border-warning border-top border-4" style="display: none;">
+    <div class="card-body">
+      <h6 class="card-title text-warning text-dark fw-bold mb-3" id="formTitulo"><i class="bi bi-pencil-square me-2"></i>Actualizar Estado de Incidencia</h6>
+      <div class="row g-3">
+        <div class="col-md-5"><label class="small text-muted">Descripción Técnica</label><input id="descripcion" class="form-control"></div>
+        <div class="col-md-2"><label class="small text-muted">Prioridad</label>
+          <select id="prioridad" class="form-select">
+            <option value="BAJA">BAJA</option>
+            <option value="MEDIA">MEDIA</option>
+            <option value="ALTA">ALTA</option>
+            <option value="CRITICA">CRITICA</option>
+          </select>
+        </div>
+        <div class="col-md-2"><label class="small text-muted">Estado</label>
+          <select id="estado_inc" class="form-select">
+            <option value="ABIERTA">ABIERTA</option>
+            <option value="EN_PROCESO">EN_PROCESO</option>
+            <option value="CERRADA">CERRADA</option>
+          </select>
+        </div>
+        <div class="col-md-3"><label class="small text-muted">Laboratorio</label><select id="laboratorio_id" class="form-select"></select></div>
+        <div class="col-12 text-end">
+          <button class="btn btn-light me-2" onclick="limpiar()">Cancelar</button>
+          <button class="btn btn-warning px-4" onclick="guardar()"><i class="bi bi-save me-1"></i> Actualizar Reporte</button>
+        </div>
+      </div>
+      <input type="hidden" id="editId">
+    </div>
+  </div>
+
   <div class="table-container">
-    <h5 class="mb-3 text-secondary">Registro Histórico</h5>
+    <h6 class="mb-3 text-secondary"><i class="bi bi-table me-2"></i>Resultados de Incidencias</h6>
     <div class="table-responsive">
       <table class="table table-hover border-top">
         <thead class="table-light text-secondary">
@@ -95,17 +97,23 @@ const rol = localStorage.getItem("rol");
 if (!token) window.location = "/login";
 
 const esAdmin = rol === "ADMIN";
+if (esAdmin) document.getElementById("accionesHeader").style.display = "table-cell";
 
-if (esAdmin) {
-  document.getElementById("accionesHeader").style.display = "table-cell";
-  document.getElementById("estado_inc").disabled = false; // El admin sí puede forzar el estado
+async function cargarTodas() {
+  const res = await fetch("/incidencias", { headers: { "Authorization": "Bearer " + token } });
+  mostrarTabla(await res.json());
 }
 
-async function cargar() {
-  const res = await fetch("/incidencias", { headers: { "Authorization": "Bearer " + token } });
-  const datos = await res.json();
-  
+async function buscarPorFecha() {
+  const fecha = document.getElementById("fechaBusqueda").value;
+  if (!fecha) return alert("Selecciona una fecha");
+  const res = await fetch(`/incidencias/por-fecha?fecha=${fecha}`, { headers: { "Authorization": "Bearer " + token } });
+  mostrarTabla(await res.json());
+}
+
+function mostrarTabla(datos) {
   let html = "";
+  if(datos.length === 0) html = `<tr><td colspan="8" class="text-center py-4">No se encontraron registros.</td></tr>`;
   datos.forEach(i => {
     const pColor = i.prioridad === "CRITICA" ? "danger" : i.prioridad === "ALTA" ? "warning text-dark" : i.prioridad === "MEDIA" ? "info text-dark" : "secondary";
     const eColor = i.estado === "CERRADA" ? "success" : i.estado === "EN_PROCESO" ? "warning text-dark" : "danger";
@@ -115,47 +123,35 @@ async function cargar() {
       <td><span class="badge bg-${pColor}">${i.prioridad}</span></td>
       <td><span class="badge rounded-pill bg-${eColor}">${i.estado}</span></td>
       <td><i class="bi bi-clock text-muted me-1"></i>${i.fecha || "-"}</td>
-      <td>${i.usuario_nombre || i.usuario_id}</td>
-      <td><i class="bi bi-building text-muted me-1"></i>${i.laboratorio_nombre || i.laboratorio_id}</td>
-      ${esAdmin ? `
-      <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary me-1" onclick='editar(${JSON.stringify(i)})'><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger" onclick="eliminar(${i.id})"><i class="bi bi-trash"></i></button>
-      </td>` : `<td style="display:none;"></td>`}
+      <td>${i.usuario_nombre}</td>
+      <td><i class="bi bi-building text-muted me-1"></i>${i.laboratorio_nombre}</td>
+      ${esAdmin ? `<td class="text-end"><button class="btn btn-sm btn-outline-primary me-1" onclick='editar(${JSON.stringify(i)})'><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="eliminar(${i.id})"><i class="bi bi-trash"></i></button></td>` : `<td style="display:none;"></td>`}
     </tr>`;
   });
   document.getElementById("tabla").innerHTML = html;
 }
 
 async function cargarSelectores() {
-  const [ru, rl] = await Promise.all([
-    fetch("/usuarios", { headers: { "Authorization": "Bearer " + token } }).then(r => r.json()),
-    fetch("/laboratorios").then(r => r.json())
-  ]);
-  document.getElementById("usuario_id").innerHTML = ru.map ? ru.map(u => `<option value="${u.id}">${u.nombre}</option>`).join("") : "";
+  const rl = await fetch("/laboratorios").then(r => r.json());
   document.getElementById("laboratorio_id").innerHTML = rl.map(l => `<option value="${l.id}">${l.nombre}</option>`).join("");
 }
 
 async function guardar() {
+  if(!esAdmin) return;
   const id = document.getElementById("editId").value;
-  // Solo el admin puede guardar una edición (PUT), cualquiera puede crear (POST)
-  if (id && !esAdmin) return alert("No tienes permisos para editar incidencias.");
-
   const body = {
     descripcion: document.getElementById("descripcion").value,
     prioridad: document.getElementById("prioridad").value,
     estado: document.getElementById("estado_inc").value,
-    usuario_id: parseInt(document.getElementById("usuario_id").value),
     laboratorio_id: parseInt(document.getElementById("laboratorio_id").value)
   };
-  const url = id ? `/incidencias/${id}` : "/incidencias";
-  const method = id ? "PUT" : "POST";
-  const res = await fetch(url, {
-    method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+  
+  const res = await fetch(`/incidencias/${id}`, {
+    method: "PUT", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     body: JSON.stringify(body)
   });
   const data = await res.json();
-  alert(data.mensaje); limpiar(); cargar();
+  alert(data.mensaje); limpiar(); cargarTodas();
 }
 
 function editar(i) {
@@ -164,29 +160,27 @@ function editar(i) {
   document.getElementById("descripcion").value = i.descripcion;
   document.getElementById("prioridad").value = i.prioridad;
   document.getElementById("estado_inc").value = i.estado;
-  document.getElementById("usuario_id").value = i.usuario_id;
   document.getElementById("laboratorio_id").value = i.laboratorio_id;
-  document.getElementById("formTitulo").innerHTML = `<i class="bi bi-pencil-square me-2"></i>Editar Incidencia #${i.id}`;
+  
+  const panel = document.getElementById("panelEdicion");
+  panel.style.display = "block";
+  panel.classList.add("fade-in");
+  panel.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function eliminar(id) {
   if(!esAdmin) return;
   if (!confirm("¿Eliminar esta incidencia?")) return;
-  const res = await fetch(`/incidencias/${id}`, {
-    method: "DELETE", headers: { "Authorization": "Bearer " + token }
-  });
-  const data = await res.json(); alert(data.mensaje); cargar();
+  await fetch(`/incidencias/${id}`, { method: "DELETE", headers: { "Authorization": "Bearer " + token } });
+  cargarTodas();
 }
 
 function limpiar() {
-  ["editId","descripcion"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("prioridad").value = "MEDIA";
-  document.getElementById("estado_inc").value = "ABIERTA";
-  document.getElementById("formTitulo").innerHTML = `<i class="bi bi-plus-circle me-2"></i>Reportar Nueva Incidencia`;
+  document.getElementById("panelEdicion").style.display = "none";
 }
 
-cargarSelectores();
-cargar();
+if(esAdmin) cargarSelectores();
+cargarTodas();
 </script>
 </body>
 </html>
