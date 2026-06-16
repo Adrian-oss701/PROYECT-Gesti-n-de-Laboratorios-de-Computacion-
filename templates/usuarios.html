@@ -86,11 +86,11 @@ const token = localStorage.getItem("token");
 const rol = localStorage.getItem("rol");
 if (!token) window.location = "/login";
 
-if (rol !== "ADMIN") {
-  document.getElementById("adminPanel").style.display = "none";
-  document.getElementById("accionesHeader").style.display = "none";
-  document.body.innerHTML = `<div class="container mt-5 text-center"><i class="bi bi-shield-lock text-danger" style="font-size:4rem;"></i><h3 class="mt-3">Acceso Denegado</h3><p>Solo los administradores pueden ver esta página.</p><a href="/dashboard" class="btn btn-primary mt-3">Volver</a></div>`;
-  throw new Error("No admin");
+const esAdmin = rol === "ADMIN";
+
+if (esAdmin) {
+  document.getElementById("accionesHeader").style.display = "table-cell";
+  document.getElementById("btnNuevaReservaContainer").style.display = "block";
 }
 
 async function cargar() {
